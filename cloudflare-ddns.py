@@ -74,10 +74,7 @@ def getIPs():
     global purgeUnknownRecords
     if ipv4_enabled:
         try:
-            a = requests.get(
-                "https://1.1.1.1/cdn-cgi/trace").text.split("\n")
-            a.pop()
-            a = dict(s.split("=") for s in a)["ip"]
+            a = getIP("https://1.1.1.1/cdn-cgi/trace")
         except Exception:
             global shown_ipv4_warning
             if not shown_ipv4_warning:
@@ -85,10 +82,7 @@ def getIPs():
                 print("🧩 IPv4 not detected via 1.1.1.1, trying 1.0.0.1")
             # Try secondary IP check
             try:
-                a = requests.get(
-                    "https://1.0.0.1/cdn-cgi/trace").text.split("\n")
-                a.pop()
-                a = dict(s.split("=") for s in a)["ip"]
+                a = getIP("https://1.0.0.1/cdn-cgi/trace")
             except Exception:
                 global shown_ipv4_warning_secondary
                 if not shown_ipv4_warning_secondary:
@@ -98,20 +92,15 @@ def getIPs():
                     deleteEntries("A")
     if ipv6_enabled:
         try:
-            aaaa = requests.get(
-                "https://[2606:4700:4700::1111]/cdn-cgi/trace").text.split("\n")
-            aaaa.pop()
-            aaaa = dict(s.split("=") for s in aaaa)["ip"]
+            aaaa = getIP("https://[2606:4700:4700::1111]/cdn-cgi/trace")
         except Exception:
             global shown_ipv6_warning
             if not shown_ipv6_warning:
                 shown_ipv6_warning = True
                 print("🧩 IPv6 not detected via 1.1.1.1, trying 1.0.0.1")
+            # Try secondary IP check
             try:
-                aaaa = requests.get(
-                    "https://[2606:4700:4700::1001]/cdn-cgi/trace").text.split("\n")
-                aaaa.pop()
-                aaaa = dict(s.split("=") for s in aaaa)["ip"]
+                aaaa = getIP("https://[2606:4700:4700::1001]/cdn-cgi/trace")
             except Exception:
                 global shown_ipv6_warning_secondary
                 if not shown_ipv6_warning_secondary:
