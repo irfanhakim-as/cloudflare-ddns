@@ -9,6 +9,7 @@
 __version__ = "1.0.2"
 
 from string import Template
+from urllib.parse import urlparse
 
 import json
 import os
@@ -82,7 +83,7 @@ def getIPs():
             global shown_ipv4_warning
             if not shown_ipv4_warning:
                 shown_ipv4_warning = True
-                print("🧩 IPv4 not detected via 1.1.1.1, trying 1.0.0.1")
+                print("🧩 IPv4 not detected via %s, trying %s" % (urlparse(ipv4_endpoints[0]).netloc, urlparse(ipv4_endpoints[-1]).netloc))
             # Try secondary IP check
             try:
                 a = getIP(ipv4_endpoints[-1])
@@ -90,7 +91,7 @@ def getIPs():
                 global shown_ipv4_warning_secondary
                 if not shown_ipv4_warning_secondary:
                     shown_ipv4_warning_secondary = True
-                    print("🧩 IPv4 not detected via 1.0.0.1. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs.")
+                    print("🧩 IPv4 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv4_endpoints[-1]).netloc)
                 if purgeUnknownRecords:
                     deleteEntries("A")
     if ipv6_enabled:
@@ -100,7 +101,7 @@ def getIPs():
             global shown_ipv6_warning
             if not shown_ipv6_warning:
                 shown_ipv6_warning = True
-                print("🧩 IPv6 not detected via 1.1.1.1, trying 1.0.0.1")
+                print("🧩 IPv6 not detected via %s, trying %s" % (urlparse(ipv6_endpoints[0]).netloc, urlparse(ipv6_endpoints[-1]).netloc))
             # Try secondary IP check
             try:
                 aaaa = getIP(ipv6_endpoints[-1])
@@ -108,7 +109,7 @@ def getIPs():
                 global shown_ipv6_warning_secondary
                 if not shown_ipv6_warning_secondary:
                     shown_ipv6_warning_secondary = True
-                    print("🧩 IPv6 not detected via 1.0.0.1. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs.")
+                    print("🧩 IPv6 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv6_endpoints[-1]).netloc)
                 if purgeUnknownRecords:
                     deleteEntries("AAAA")
     ips = {}
