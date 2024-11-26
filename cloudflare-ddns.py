@@ -72,10 +72,12 @@ def getIPs():
     aaaa = None
     global ipv4_enabled
     global ipv6_enabled
+    global ipv4_endpoints
+    global ipv6_endpoints
     global purgeUnknownRecords
     if ipv4_enabled:
         try:
-            a = getIP("https://1.1.1.1/cdn-cgi/trace")
+            a = getIP(ipv4_endpoints[0])
         except Exception:
             global shown_ipv4_warning
             if not shown_ipv4_warning:
@@ -83,7 +85,7 @@ def getIPs():
                 print("🧩 IPv4 not detected via 1.1.1.1, trying 1.0.0.1")
             # Try secondary IP check
             try:
-                a = getIP("https://1.0.0.1/cdn-cgi/trace")
+                a = getIP(ipv4_endpoints[-1])
             except Exception:
                 global shown_ipv4_warning_secondary
                 if not shown_ipv4_warning_secondary:
@@ -93,7 +95,7 @@ def getIPs():
                     deleteEntries("A")
     if ipv6_enabled:
         try:
-            aaaa = getIP("https://[2606:4700:4700::1111]/cdn-cgi/trace")
+            aaaa = getIP(ipv6_endpoints[0])
         except Exception:
             global shown_ipv6_warning
             if not shown_ipv6_warning:
@@ -101,7 +103,7 @@ def getIPs():
                 print("🧩 IPv6 not detected via 1.1.1.1, trying 1.0.0.1")
             # Try secondary IP check
             try:
-                aaaa = getIP("https://[2606:4700:4700::1001]/cdn-cgi/trace")
+                aaaa = getIP(ipv6_endpoints[-1])
             except Exception:
                 global shown_ipv6_warning_secondary
                 if not shown_ipv6_warning_secondary:
@@ -258,6 +260,8 @@ if __name__ == '__main__':
     shown_ipv6_warning_secondary = False
     ipv4_enabled = True
     ipv6_enabled = True
+    ipv4_endpoints = ("https://1.1.1.1/cdn-cgi/trace", "https://1.0.0.1/cdn-cgi/trace")
+    ipv6_endpoints = ("https://[2606:4700:4700::1111]/cdn-cgi/trace", "https://[2606:4700:4700::1001]/cdn-cgi/trace")
     purgeUnknownRecords = False
 
     if sys.version_info < (3, 5):
