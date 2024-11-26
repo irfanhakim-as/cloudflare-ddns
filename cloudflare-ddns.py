@@ -63,7 +63,8 @@ def getIP(endpoint, **kwargs):
     response.raise_for_status()
     # create list out of response
     l = [line for line in response.text.split("\n") if line.strip()]
-    return dict(i.split("=") for i in l)["ip"]
+    # support both key-value and single value endpoint types
+    return dict(i.split("=") for i in l)["ip"] if len(l) > 1 else l[0]
 
 
 def getIPs():
