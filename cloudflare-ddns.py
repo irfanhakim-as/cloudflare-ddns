@@ -53,6 +53,19 @@ def deleteEntries(type):
             print("🗑️ Deleted stale record " + identifier)
 
 
+def getIP(endpoint, **kwargs):
+    # Helper function for getting IPv4 or IPv6 address
+    # from a specified endpoint. Raises an error
+    # in the case of a response or return value failure.
+    timeout = kwargs.get("timeout", 10)
+    response = requests.get(endpoint, timeout=timeout)
+    # raise any error status
+    response.raise_for_status()
+    # create list out of response
+    l = [line for line in response.text.split("\n") if line.strip()]
+    return dict(i.split("=") for i in l)["ip"]
+
+
 def getIPs():
     a = None
     aaaa = None
