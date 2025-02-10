@@ -61,6 +61,3 @@ venv.bak/
 
 # Git History
 **/.history/*
-
-# vs-code
-.vscode/
