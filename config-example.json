@@ -25,5 +25,6 @@
 	"aaaa": true,
 	"purgeUnknownRecords": false,
 	"ttl": 300,
-	"script_delay": 5
+	"cyclic_config_read": true,
+	"sleep_time": 5
 }
