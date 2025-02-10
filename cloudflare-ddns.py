@@ -223,6 +223,6 @@ if __name__ == "__main__":
             time.sleep(ddns.ttl) if not killer.kill_now.is_set() else exit(0)
     elif not killer.kill_now.is_set():
         print(f"❓ Unrecognized parameter '{sys.argv[1]}'." if len(sys.argv) > 1 else f"\n\n💡 Usage to run it in loop: python -u {sys.argv[0].split('/')[-1]} --repeat")
-        print(f"\n🕰️  Tyring to update records 1 time...")
+        print(f"\n🕰️  Trying to update records 1 time...")
         ddns.update_ips()
         time.sleep(ddns.config.get("sleep_time") if ddns.config else 10)
