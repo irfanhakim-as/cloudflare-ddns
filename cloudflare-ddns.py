@@ -101,41 +101,47 @@ def getIPs():
     global ipv6_endpoints
     global purgeUnknownRecords
     if ipv4_enabled:
-        try:
-            a = getIP(ipv4_endpoints[0])
-        except Exception:
-            global shown_ipv4_warning
-            if not shown_ipv4_warning:
-                shown_ipv4_warning = True
-                print("🧩 IPv4 not detected via %s, trying %s" % (urlparse(ipv4_endpoints[0]).netloc, urlparse(ipv4_endpoints[-1]).netloc))
-            # Try secondary IP check
-            try:
-                a = getIP(ipv4_endpoints[-1])
-            except Exception:
-                global shown_ipv4_warning_secondary
-                if not shown_ipv4_warning_secondary:
-                    shown_ipv4_warning_secondary = True
-                    print("🧩 IPv4 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv4_endpoints[-1]).netloc)
-                if purgeUnknownRecords:
-                    deleteEntries("A")
+        a = voteIP(ipv4_endpoints, "IPv4")
+        if a is None and purgeUnknownRecords:
+            deleteEntries("A")
+        # try:
+        #     a = getIP(ipv4_endpoints[0])
+        # except Exception:
+        #     global shown_ipv4_warning
+        #     if not shown_ipv4_warning:
+        #         shown_ipv4_warning = True
+        #         print("🧩 IPv4 not detected via %s, trying %s" % (urlparse(ipv4_endpoints[0]).netloc, urlparse(ipv4_endpoints[-1]).netloc))
+        #     # Try secondary IP check
+        #     try:
+        #         a = getIP(ipv4_endpoints[-1])
+        #     except Exception:
+        #         global shown_ipv4_warning_secondary
+        #         if not shown_ipv4_warning_secondary:
+        #             shown_ipv4_warning_secondary = True
+        #             print("🧩 IPv4 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv4_endpoints[-1]).netloc)
+        #         if purgeUnknownRecords:
+        #             deleteEntries("A")
     if ipv6_enabled:
-        try:
-            aaaa = getIP(ipv6_endpoints[0])
-        except Exception:
-            global shown_ipv6_warning
-            if not shown_ipv6_warning:
-                shown_ipv6_warning = True
-                print("🧩 IPv6 not detected via %s, trying %s" % (urlparse(ipv6_endpoints[0]).netloc, urlparse(ipv6_endpoints[-1]).netloc))
-            # Try secondary IP check
-            try:
-                aaaa = getIP(ipv6_endpoints[-1])
-            except Exception:
-                global shown_ipv6_warning_secondary
-                if not shown_ipv6_warning_secondary:
-                    shown_ipv6_warning_secondary = True
-                    print("🧩 IPv6 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv6_endpoints[-1]).netloc)
-                if purgeUnknownRecords:
-                    deleteEntries("AAAA")
+        aaaa = voteIP(ipv6_endpoints, "IPv6")
+        if aaaa is None and purgeUnknownRecords:
+            deleteEntries("AAAA")
+        # try:
+        #     aaaa = getIP(ipv6_endpoints[0])
+        # except Exception:
+        #     global shown_ipv6_warning
+        #     if not shown_ipv6_warning:
+        #         shown_ipv6_warning = True
+        #         print("🧩 IPv6 not detected via %s, trying %s" % (urlparse(ipv6_endpoints[0]).netloc, urlparse(ipv6_endpoints[-1]).netloc))
+        #     # Try secondary IP check
+        #     try:
+        #         aaaa = getIP(ipv6_endpoints[-1])
+        #     except Exception:
+        #         global shown_ipv6_warning_secondary
+        #         if not shown_ipv6_warning_secondary:
+        #             shown_ipv6_warning_secondary = True
+        #             print("🧩 IPv6 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv6_endpoints[-1]).netloc)
+        #         if purgeUnknownRecords:
+        #             deleteEntries("AAAA")
     ips = {}
     if (a is not None):
         ips["ipv4"] = {
