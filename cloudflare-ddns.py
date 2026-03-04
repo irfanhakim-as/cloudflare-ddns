@@ -285,10 +285,10 @@ def updateIPs(ips):
 
 
 if __name__ == '__main__':
-    shown_ipv4_warning = False
-    shown_ipv4_warning_secondary = False
-    shown_ipv6_warning = False
-    shown_ipv6_warning_secondary = False
+    # shown_ipv4_warning = False
+    # shown_ipv4_warning_secondary = False
+    # shown_ipv6_warning = False
+    # shown_ipv6_warning_secondary = False
     ipv4_enabled = True
     ipv6_enabled = True
     ipv4_endpoints = ("https://1.1.1.1/cdn-cgi/trace", "https://ipv4.icanhazip.com")
