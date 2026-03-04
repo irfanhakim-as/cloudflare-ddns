@@ -6,7 +6,7 @@
 #                A small, 🕵️ privacy centric, and ⚡
 #                lightning fast multi-architecture Docker image for self hosting projects.
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 from string import Template
 from urllib.parse import urlparse
