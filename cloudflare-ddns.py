@@ -11,6 +11,7 @@ __version__ = "1.0.2"
 from string import Template
 from urllib.parse import urlparse
 
+import ipaddress
 import json
 import os
 import signal
@@ -65,7 +66,10 @@ def getIP(endpoint, **kwargs):
     # create list out of response
     l = [line for line in response.text.split("\n") if line.strip()]
     # support both key-value and single value endpoint types
-    return dict(i.split("=", 1) for i in l)["ip"] if len(l) > 1 else l[0]
+    result = dict(i.split("=", 1) for i in l)["ip"] if len(l) > 1 else l[0]
+    # raise ValueError if result is not a valid IP address
+    ipaddress.ip_address(result)
+    return result
 
 
 def getIPs():
