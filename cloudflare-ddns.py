@@ -291,8 +291,8 @@ if __name__ == '__main__':
     # shown_ipv6_warning_secondary = False
     ipv4_enabled = True
     ipv6_enabled = True
-    ipv4_endpoints = ("https://1.1.1.1/cdn-cgi/trace", "https://ipv4.icanhazip.com")
-    ipv6_endpoints = ("https://[2606:4700:4700::1111]/cdn-cgi/trace", "https://ipv6.icanhazip.com")
+    ipv4_endpoints = ("https://1.1.1.1/cdn-cgi/trace", "https://ipv4.icanhazip.com", "https://api.ipify.org")
+    ipv6_endpoints = ("https://[2606:4700:4700::1111]/cdn-cgi/trace", "https://ipv6.icanhazip.com", "https://api6.ipify.org")
     purgeUnknownRecords = False
 
     if sys.version_info < (3, 5):
