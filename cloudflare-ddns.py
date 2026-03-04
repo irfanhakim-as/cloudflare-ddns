@@ -65,7 +65,7 @@ def getIP(endpoint, **kwargs):
     # create list out of response
     l = [line for line in response.text.split("\n") if line.strip()]
     # support both key-value and single value endpoint types
-    return dict(i.split("=") for i in l)["ip"] if len(l) > 1 else l[0]
+    return dict(i.split("=", 1) for i in l)["ip"] if len(l) > 1 else l[0]
 
 
 def getIPs():
