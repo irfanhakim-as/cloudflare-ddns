@@ -72,6 +72,26 @@ def getIP(endpoint, **kwargs):
     return result
 
 
+def voteIP(endpoints, label):
+    # Queries all endpoints and returns the IP with the most votes
+    # or warns if endpoints disagree or all fail.
+    votes = {}
+    for endpoint in endpoints:
+        try:
+            ip = getIP(endpoint)
+            votes.setdefault(ip, []).append(urlparse(endpoint).netloc)
+        except Exception:
+            print("🧩 %s not detected via %s" % (label, urlparse(endpoint).netloc))
+    if not votes:
+        return None
+    winner = max(votes, key=lambda ip: len(votes[ip]))
+    total = sum(len(v) for v in votes.values())
+    # warn if the winning IP does not have the majority of votes
+    if len(votes[winner]) * 2 <= total:
+        print("⚠️ %s endpoint disagreement detected: %s" % (label, {ip: hosts for ip, hosts in votes.items()}))
+    return winner
+
+
 def getIPs():
     a = None
     aaaa = None
