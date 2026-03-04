@@ -9,6 +9,7 @@
 __version__ = "1.0.2"
 
 from string import Template
+from urllib.parse import urlparse
 
 import json
 import os
@@ -53,57 +54,62 @@ def deleteEntries(type):
             print("🗑️ Deleted stale record " + identifier)
 
 
+def getIP(endpoint, **kwargs):
+    # Helper function for getting IPv4 or IPv6 address
+    # from a specified endpoint. Raises an error
+    # in the case of a response or return value failure.
+    timeout = kwargs.get("timeout", 10)
+    response = requests.get(endpoint, timeout=timeout)
+    # raise any error status
+    response.raise_for_status()
+    # create list out of response
+    l = [line for line in response.text.split("\n") if line.strip()]
+    # support both key-value and single value endpoint types
+    return dict(i.split("=") for i in l)["ip"] if len(l) > 1 else l[0]
+
+
 def getIPs():
     a = None
     aaaa = None
     global ipv4_enabled
     global ipv6_enabled
+    global ipv4_endpoints
+    global ipv6_endpoints
     global purgeUnknownRecords
     if ipv4_enabled:
         try:
-            a = requests.get(
-                "https://1.1.1.1/cdn-cgi/trace").text.split("\n")
-            a.pop()
-            a = dict(s.split("=") for s in a)["ip"]
+            a = getIP(ipv4_endpoints[0])
         except Exception:
             global shown_ipv4_warning
             if not shown_ipv4_warning:
                 shown_ipv4_warning = True
-                print("🧩 IPv4 not detected via 1.1.1.1, trying 1.0.0.1")
+                print("🧩 IPv4 not detected via %s, trying %s" % (urlparse(ipv4_endpoints[0]).netloc, urlparse(ipv4_endpoints[-1]).netloc))
             # Try secondary IP check
             try:
-                a = requests.get(
-                    "https://1.0.0.1/cdn-cgi/trace").text.split("\n")
-                a.pop()
-                a = dict(s.split("=") for s in a)["ip"]
+                a = getIP(ipv4_endpoints[-1])
             except Exception:
                 global shown_ipv4_warning_secondary
                 if not shown_ipv4_warning_secondary:
                     shown_ipv4_warning_secondary = True
-                    print("🧩 IPv4 not detected via 1.0.0.1. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs.")
+                    print("🧩 IPv4 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv4_endpoints[-1]).netloc)
                 if purgeUnknownRecords:
                     deleteEntries("A")
     if ipv6_enabled:
         try:
-            aaaa = requests.get(
-                "https://[2606:4700:4700::1111]/cdn-cgi/trace").text.split("\n")
-            aaaa.pop()
-            aaaa = dict(s.split("=") for s in aaaa)["ip"]
+            aaaa = getIP(ipv6_endpoints[0])
         except Exception:
             global shown_ipv6_warning
             if not shown_ipv6_warning:
                 shown_ipv6_warning = True
-                print("🧩 IPv6 not detected via 1.1.1.1, trying 1.0.0.1")
+                print("🧩 IPv6 not detected via %s, trying %s" % (urlparse(ipv6_endpoints[0]).netloc, urlparse(ipv6_endpoints[-1]).netloc))
+            # Try secondary IP check
             try:
-                aaaa = requests.get(
-                    "https://[2606:4700:4700::1001]/cdn-cgi/trace").text.split("\n")
-                aaaa.pop()
-                aaaa = dict(s.split("=") for s in aaaa)["ip"]
+                aaaa = getIP(ipv6_endpoints[-1])
             except Exception:
                 global shown_ipv6_warning_secondary
                 if not shown_ipv6_warning_secondary:
                     shown_ipv6_warning_secondary = True
-                    print("🧩 IPv6 not detected via 1.0.0.1. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs.")
+                    print("🧩 IPv6 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv6_endpoints[-1]).netloc)
                 if purgeUnknownRecords:
                     deleteEntries("AAAA")
     ips = {}
@@ -255,6 +261,8 @@ if __name__ == '__main__':
     shown_ipv6_warning_secondary = False
     ipv4_enabled = True
     ipv6_enabled = True
+    ipv4_endpoints = ("https://1.1.1.1/cdn-cgi/trace", "https://ipv4.icanhazip.com")
+    ipv6_endpoints = ("https://[2606:4700:4700::1111]/cdn-cgi/trace", "https://ipv6.icanhazip.com")
     purgeUnknownRecords = False
 
     if sys.version_info < (3, 5):
