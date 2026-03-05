@@ -6,11 +6,12 @@
 #                A small, 🕵️ privacy centric, and ⚡
 #                lightning fast multi-architecture Docker image for self hosting projects.
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 from string import Template
 from urllib.parse import urlparse
 
+import ipaddress
 import json
 import os
 import signal
@@ -65,7 +66,30 @@ def getIP(endpoint, **kwargs):
     # create list out of response
     l = [line for line in response.text.split("\n") if line.strip()]
     # support both key-value and single value endpoint types
-    return dict(i.split("=") for i in l)["ip"] if len(l) > 1 else l[0]
+    result = dict(i.split("=", 1) for i in l)["ip"] if len(l) > 1 else l[0]
+    # raise ValueError if result is not a valid IP address
+    ipaddress.ip_address(result)
+    return result
+
+
+def voteIP(endpoints, label):
+    # Queries all endpoints and returns the IP with the most votes
+    # or warns if endpoints disagree or all fail.
+    votes = {}
+    for endpoint in endpoints:
+        try:
+            ip = getIP(endpoint)
+            votes.setdefault(ip, []).append(urlparse(endpoint).netloc)
+        except Exception:
+            print("🧩 %s not detected via %s" % (label, urlparse(endpoint).netloc))
+    if not votes:
+        return None
+    winner = max(votes, key=lambda ip: len(votes[ip]))
+    total = sum(len(v) for v in votes.values())
+    # warn if the winning IP does not have the majority of votes
+    if len(votes[winner]) * 2 <= total:
+        print("⚠️ %s endpoint disagreement detected: %s" % (label, {ip: hosts for ip, hosts in votes.items()}))
+    return winner
 
 
 def getIPs():
@@ -77,41 +101,47 @@ def getIPs():
     global ipv6_endpoints
     global purgeUnknownRecords
     if ipv4_enabled:
-        try:
-            a = getIP(ipv4_endpoints[0])
-        except Exception:
-            global shown_ipv4_warning
-            if not shown_ipv4_warning:
-                shown_ipv4_warning = True
-                print("🧩 IPv4 not detected via %s, trying %s" % (urlparse(ipv4_endpoints[0]).netloc, urlparse(ipv4_endpoints[-1]).netloc))
-            # Try secondary IP check
-            try:
-                a = getIP(ipv4_endpoints[-1])
-            except Exception:
-                global shown_ipv4_warning_secondary
-                if not shown_ipv4_warning_secondary:
-                    shown_ipv4_warning_secondary = True
-                    print("🧩 IPv4 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv4_endpoints[-1]).netloc)
-                if purgeUnknownRecords:
-                    deleteEntries("A")
+        a = voteIP(ipv4_endpoints, "IPv4")
+        if a is None and purgeUnknownRecords:
+            deleteEntries("A")
+        # try:
+        #     a = getIP(ipv4_endpoints[0])
+        # except Exception:
+        #     global shown_ipv4_warning
+        #     if not shown_ipv4_warning:
+        #         shown_ipv4_warning = True
+        #         print("🧩 IPv4 not detected via %s, trying %s" % (urlparse(ipv4_endpoints[0]).netloc, urlparse(ipv4_endpoints[-1]).netloc))
+        #     # Try secondary IP check
+        #     try:
+        #         a = getIP(ipv4_endpoints[-1])
+        #     except Exception:
+        #         global shown_ipv4_warning_secondary
+        #         if not shown_ipv4_warning_secondary:
+        #             shown_ipv4_warning_secondary = True
+        #             print("🧩 IPv4 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv4_endpoints[-1]).netloc)
+        #         if purgeUnknownRecords:
+        #             deleteEntries("A")
     if ipv6_enabled:
-        try:
-            aaaa = getIP(ipv6_endpoints[0])
-        except Exception:
-            global shown_ipv6_warning
-            if not shown_ipv6_warning:
-                shown_ipv6_warning = True
-                print("🧩 IPv6 not detected via %s, trying %s" % (urlparse(ipv6_endpoints[0]).netloc, urlparse(ipv6_endpoints[-1]).netloc))
-            # Try secondary IP check
-            try:
-                aaaa = getIP(ipv6_endpoints[-1])
-            except Exception:
-                global shown_ipv6_warning_secondary
-                if not shown_ipv6_warning_secondary:
-                    shown_ipv6_warning_secondary = True
-                    print("🧩 IPv6 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv6_endpoints[-1]).netloc)
-                if purgeUnknownRecords:
-                    deleteEntries("AAAA")
+        aaaa = voteIP(ipv6_endpoints, "IPv6")
+        if aaaa is None and purgeUnknownRecords:
+            deleteEntries("AAAA")
+        # try:
+        #     aaaa = getIP(ipv6_endpoints[0])
+        # except Exception:
+        #     global shown_ipv6_warning
+        #     if not shown_ipv6_warning:
+        #         shown_ipv6_warning = True
+        #         print("🧩 IPv6 not detected via %s, trying %s" % (urlparse(ipv6_endpoints[0]).netloc, urlparse(ipv6_endpoints[-1]).netloc))
+        #     # Try secondary IP check
+        #     try:
+        #         aaaa = getIP(ipv6_endpoints[-1])
+        #     except Exception:
+        #         global shown_ipv6_warning_secondary
+        #         if not shown_ipv6_warning_secondary:
+        #             shown_ipv6_warning_secondary = True
+        #             print("🧩 IPv6 not detected via %s. Verify your ISP or DNS provider isn't blocking Cloudflare's IPs." % urlparse(ipv6_endpoints[-1]).netloc)
+        #         if purgeUnknownRecords:
+        #             deleteEntries("AAAA")
     ips = {}
     if (a is not None):
         ips["ipv4"] = {
@@ -255,14 +285,14 @@ def updateIPs(ips):
 
 
 if __name__ == '__main__':
-    shown_ipv4_warning = False
-    shown_ipv4_warning_secondary = False
-    shown_ipv6_warning = False
-    shown_ipv6_warning_secondary = False
+    # shown_ipv4_warning = False
+    # shown_ipv4_warning_secondary = False
+    # shown_ipv6_warning = False
+    # shown_ipv6_warning_secondary = False
     ipv4_enabled = True
     ipv6_enabled = True
-    ipv4_endpoints = ("https://1.1.1.1/cdn-cgi/trace", "https://ipv4.icanhazip.com")
-    ipv6_endpoints = ("https://[2606:4700:4700::1111]/cdn-cgi/trace", "https://ipv6.icanhazip.com")
+    ipv4_endpoints = ("https://1.1.1.1/cdn-cgi/trace", "https://ipv4.icanhazip.com", "https://api.ipify.org")
+    ipv6_endpoints = ("https://[2606:4700:4700::1111]/cdn-cgi/trace", "https://ipv6.icanhazip.com", "https://api6.ipify.org")
     purgeUnknownRecords = False
 
     if sys.version_info < (3, 5):
